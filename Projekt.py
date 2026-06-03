@@ -3,7 +3,7 @@
 class Word:
     def __init__(self, english, estonian, russian):
         self.english = english
-        self.translation = estonian
+        self.estonian = estonian
         self.russian = russian
 
 
@@ -15,7 +15,6 @@ class User:
 
     def add_word(self, word):
         self.words[word.english] = word
-        
 
     def get_words(self):
         return self.words
@@ -23,53 +22,55 @@ class User:
 
 class Lesson:
     def __init__(self, user, name):
-        self.languages = ["english", "estonian", "russian"]
         self.user = user
         self.name = name
+
+        self.languages = ["english", "estonian", "russian"]
         self.lessonLanguage = None
         self.targetLanguage = None
+
         self.words = []
 
+    def _choice_to_language(self, choice):
+        languages = {
+            "1": "english",
+            "2": "estonian",
+            "3": "russian"
+        }
+        return languages.get(choice)
+
     def _ask_language_choice(self, message):
-        print(message)
-        choice = input("1. English\n2. Estonian\n3. Russian\n")
-        return self._choice_to_language(choice)
+        while True:
+            print(message)
+            choice = input("1. English\n2. Estonian\n3. Russian\n")
+            lang = self._choice_to_language(choice)
+            if lang:
+                return lang
+            print("Invalid choice. Try again.\n")
 
     def choose_language(self):
         self.lessonLanguage = self._ask_language_choice("Choose source language:")
         self.targetLanguage = self._ask_language_choice("Choose target language:")
         if self.targetLanguage == self.lessonLanguage:
-            print("Source and target are the same. Defaulting target to Estonian.")
+            print("Source and target are the same. Fixing target language...")
             if self.lessonLanguage != "estonian":
                 self.targetLanguage = "estonian"
             else:
                 self.targetLanguage = "english"
 
-    def _choice_to_language(self, choice):
-        if choice == "1":
-            return "english"
-        if choice == "2":
-            return "estonian"
-        if choice == "3":
-            return "russian"
-        print("Invalid choice. Defaulting to English.")
-        return "english"
-
     def _word_in_language(self, word, language):
         if language == "estonian":
-            return word.translation
+            return word.estonian
         if language == "russian":
             return word.russian
         return word.english
-        
-    def get_words(self):
-        return self.words
 
     def startLesson(self):
         self.choose_language()
         print(
-            f"Starting {self.name}: {self.lessonLanguage} -> {self.targetLanguage} "
-            f"for {self.user.name}. Your current score is {self.user.score}. Good luck!"
+            f"\nStarting {self.name}: "
+            f"{self.lessonLanguage} -> {self.targetLanguage} "
+            f"for {self.user.name}. Score: {self.user.score}\n"
         )
         start_score = self.user.score
         for word in self.words:
@@ -79,21 +80,26 @@ class Lesson:
                 f"What is the translation of '{source_text}' "
                 f"from {self.lessonLanguage} to {self.targetLanguage}?"
             )
-            answer = input().strip()
-            if answer.lower() == target_text.lower():
-                print("Correct!")
+            answer = input("Your answer: ").strip().lower()
+            if answer == target_text.strip().lower():
+                print("Correct!\n")
                 self.user.score += 1
             else:
-                print(f"Wrong! The correct answer is '{target_text}'.")
+                print(f"Wrong! The correct answer is '{target_text}'.\n")
+
         lesson_score = self.user.score - start_score
+
+        print("=" * 40)
         print("Lesson finished!")
         print(f"User: {self.user.name}")
         print(f"Lesson: {self.name}")
-        print(f"Correct answers in this lesson: {lesson_score} / {len(self.words)}")
+        print(f"Correct answers: {lesson_score} / {len(self.words)}")
         print(f"Total score: {self.user.score}")
+        print("=" * 40)
 
 
-word1 = [
+
+words = [
     Word("Hello", "Tere", "Привет"),
     Word("Goodbye", "Head aega", "До свидания"),
     Word("Thank you", "Aitäh", "Спасибо"),
@@ -107,7 +113,9 @@ word1 = [
     Word("Correct", "Õige", "Верно")
 ]
 
-user1 = User('Alice')
+
+user1 = User("Alice")
 lesson1 = Lesson(user1, "Basic Vocabulary")
-lesson1.words.extend(word1)
+
+lesson1.words.extend(words)
 lesson1.startLesson()
